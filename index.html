@@ -28,19 +28,20 @@ html[data-theme=light]{
   --card:rgba(255,255,255,.82);
 }
 
-/* Phone Friendly mode */
+/* Phone Friendly mode — added without changing the existing themes */
 body.phone-friendly .main{min-width:0}
+body.phone-friendly .topbar{min-height:58px}
 body.phone-friendly .composer{padding:10px;gap:8px}
 body.phone-friendly .composer input{min-height:46px;font-size:16px}
 body.phone-friendly .composer button{min-width:46px;min-height:46px}
 body.phone-friendly .msg{max-width:92%}
-body.phone-friendly .topbar{min-height:58px}
 body.phone-friendly button{touch-action:manipulation}
 @media(max-width:880px){
   body.phone-friendly .side{width:min(86vw,320px)}
-  body.phone-friendly .main{margin-left:0!important}
-  body.phone-friendly .composer input{font-size:16px}
+  body.phone-friendly .main{margin-left:0!important;width:100%;min-width:0}
   body.phone-friendly .msg{max-width:94%}
+  body.phone-friendly .composer{width:100%}
+  body.phone-friendly .composer input{font-size:16px}
 }
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
@@ -683,6 +684,7 @@ const maybeCloseSide = ()=>{ if(!isDesktop()) setSide(false); };
 setSide( isDesktop() ? ((localStorage.getItem('relay_side') || 'open') !== 'closed') : false );
 
 /* ================= THEME + VANTA BACKGROUND ================= */
+/* Phone Friendly is an independent display option; Dark/Light stay unchanged. */
 let phoneFriendly = localStorage.getItem('relay_phone_friendly') === '1';
 document.body.classList.toggle('phone-friendly', phoneFriendly);
 
@@ -1558,9 +1560,7 @@ function closeModal(){
   }
   const um = e.target.closest('[data-unmem]');
   if(um){ await removeMember(um.dataset.sid, um.dataset.unmem); return; }
-  const th = e.target.closest('[data-theme-set]');
-  if(th){ setTheme(th.dataset.themeSet); markSettings(); return; }
-  const ph = e.target.closest('[data-phone-set]');
+  const ph = e.target.closest('[data-phone-toggle]');
   if(ph){
     phoneFriendly = !phoneFriendly;
     localStorage.setItem('relay_phone_friendly', phoneFriendly ? '1' : '0');
@@ -1568,6 +1568,8 @@ function closeModal(){
     markSettings();
     return;
   }
+  const th = e.target.closest('[data-theme-set]');
+  if(th){ setTheme(th.dataset.themeSet); markSettings(); return; }
   const fx = e.target.closest('[data-fx]');
   if(fx){ setVanta(fx.dataset.fx); markSettings(); return; }
   const jr = e.target.closest('[data-join]');
@@ -1617,7 +1619,7 @@ function closeModal(){
     <div class="seg">
       <button class="seg-b" data-theme-set="dark">Dark</button>
       <button class="seg-b" data-theme-set="light">Light</button>
-      <button class="seg-b" data-phone-set="true">📱 Phone Friendly</button>
+      <button class="seg-b" data-phone-toggle="true">📱 Phone Friendly</button>
     </div>
     <label>chat background</label>
     <div class="fx-grid">${Object.entries(VANTA_FX).map(([k,v])=>`<button class="fx-b" data-fx="${k}">${v.label}</button>`).join('')}</div>
@@ -1626,7 +1628,10 @@ function closeModal(){
   markSettings();
 };
 function markSettings(){
-  document.querySelectorAll('.seg-b').forEach(b=>b.classList.toggle('active', b.dataset.phoneSet ? phoneFriendly : b.dataset.themeSet===curTheme));
+  document.querySelectorAll('.seg-b').forEach(b=>{
+    if(b.dataset.phoneToggle) b.classList.toggle('active', phoneFriendly);
+    else b.classList.toggle('active', b.dataset.themeSet===curTheme);
+  });
   document.querySelectorAll('.fx-b').forEach(b=>b.classList.toggle('active', b.dataset.fx===vantaKey));
 }
 
