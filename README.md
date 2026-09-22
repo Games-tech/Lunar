@@ -1,4 +1,4 @@
-#  Lunaer
+#  LunaerHome
 
 A real-time group chat web app — single HTML file, no backend server, no build step. Just open it, sign up, and start chatting.
 
