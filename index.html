@@ -27,6 +27,36 @@ html[data-theme=light]{
   --bad:#E35D5D; --ok:#3EA86B;
   --card:rgba(255,255,255,.82);
 }
+html[data-theme=discord]{
+  --bg:#1E1F22; --panel:#2B2D31; --panel2:#35373C; --panel3:#3F4147;
+  --line:#26282C; --line2:#3F4147;
+  --text:#DBDEE1; --muted:#949BA4; --faint:#6D6F78;
+  --acc:#5865F2; --acc-ink:#FFFFFF; --acc-hi:#4752C4;
+  --bad:#F23F42; --ok:#23A55A;
+  --card:#313338;
+}
+
+/* ---------- Discord theme ---------- */
+html[data-theme=discord] body{background:#1E1F22}
+html[data-theme=discord] #vantaBg{display:none}
+html[data-theme=discord] .side{background:#2B2D31;border-right-color:#1E1F22;width:240px}
+html[data-theme=discord] .main{margin:0 0 0 252px;height:100vh;border:none;border-radius:0;background:#313338;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none}
+html[data-theme=discord] body.side-open .main{margin-left:252px}
+html[data-theme=discord] .chat-head{height:58px;background:#313338;border-bottom-color:#26282C}
+html[data-theme=discord] .msgs{padding:16px 20px}
+html[data-theme=discord] .msg{padding:3px 10px;border-radius:4px;margin-bottom:1px}
+html[data-theme=discord] .msg:hover{background:#2E3035}
+html[data-theme=discord] .msg .ava{border-radius:50%;width:40px;height:40px;font-size:15px}
+html[data-theme=discord] .msg .mh .name{font-size:15px}
+html[data-theme=discord] .msg .mh .uname,
+html[data-theme=discord] .msg .mh .time{font-size:11px}
+html[data-theme=discord] .msg .text{font-size:15px;line-height:1.4}
+html[data-theme=discord] .composer{margin:0 20px 20px;background:#383A40;border-color:#383A40;border-radius:8px}
+html[data-theme=discord] .composer textarea{font-size:15px}
+html[data-theme=discord] .icon-btn:hover{background:#35373C}
+html[data-theme=discord] .btn{border-radius:4px}
+html[data-theme=discord] .seg-b.active{background:#5865F2;color:#fff;border-color:#5865F2}
+html[data-theme=discord] .modal{background:#313338;border-color:#1E1F22}
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
 html,body{height:100%}
@@ -711,7 +741,7 @@ const VANTA_FX = {
 };
 
 function setTheme(t){
-  curTheme = (t==='light') ? 'light' : 'dark';
+  curTheme = (t==='light' || t==='discord') ? t : 'dark';
   localStorage.setItem('relay_theme', curTheme);
   document.documentElement.dataset.theme = curTheme;
   if(vantaKey !== 'none') setVanta(vantaKey);
@@ -1591,6 +1621,7 @@ function closeModal(){
     <div class="seg">
       <button class="seg-b" data-theme-set="dark">Dark</button>
       <button class="seg-b" data-theme-set="light">Light</button>
+      <button class="seg-b" data-theme-set="discord">Discord</button>
     </div>
     <label>chat background</label>
     <div class="fx-grid">${Object.entries(VANTA_FX).map(([k,v])=>`<button class="fx-b" data-fx="${k}">${v.label}</button>`).join('')}</div>
