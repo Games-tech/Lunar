@@ -15,7 +15,7 @@ A real-time group chat web app — single HTML file, no backend server, no build
 - **Real-time messaging** — powered by Firebase Realtime Database; messages sync instantly across everyone in a room
 - **GIFs** — built-in Giphy search and picker
 - **Image uploads** — attach photos directly from your device (auto-compressed before sending)
-- **Reactions** — hover any message to react with 👍 🌒 😂 🦆 😢 🔥
+- **Reactions** — hover any message to react with 👍 ❤️ 😂 🦆 😢 🔥
 - **Replies** — quote and reply to a specific message
 - **Profiles** — custom display name, name color (color picker), and profile photo
 - **Click-to-view profiles** — click anyone's name or avatar to see their profile card
