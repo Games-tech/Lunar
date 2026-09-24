@@ -494,6 +494,75 @@ const MSG_COOLDOWN = 2000;
 const DUP_WINDOW = 30000;
 const REACTIONS = ['👍','❤️','😂','😮','😢','🔥','🦆'];
 
+/* ================= DEVICE NOTIFICATIONS ================= */
+let notifyUnsubs = [];
+let notifyReady = false;
+const notifySeen = new Set();
+let notifyPermissionAsked = false;
+
+async function enableDeviceNotifications(){
+  if(!('Notification' in window)) return false;
+  if(Notification.permission === 'granted') { notifyReady = true; return true; }
+  if(Notification.permission === 'denied') return false;
+  if(notifyPermissionAsked) return false;
+  notifyPermissionAsked = true;
+  try{
+    const p = await Notification.requestPermission();
+    notifyReady = p === 'granted';
+    return notifyReady;
+  }catch{ return false; }
+}
+
+function showDeviceNotification(sender, text){
+  if(!notifyReady || Notification.permission !== 'granted') return;
+  if(!document.hidden) return;
+  try{
+    const n = new Notification(dispOf(sender) || '@'+sender, {
+      body: String(text || 'sent you a message').slice(0,180),
+      tag: 'lunaer-dm-'+sender,
+      renotify: true,
+      icon: '/favicon.ico'
+    });
+    n.onclick = ()=>{
+      try{ window.focus(); }catch{}
+      n.close();
+    };
+  }catch{}
+}
+
+function stopDMNotificationListeners(){
+  notifyUnsubs.forEach(fn=>{ try{ fn(); }catch{} });
+  notifyUnsubs = [];
+  notifySeen.clear();
+}
+
+function startDMNotificationListeners(){
+  stopDMNotificationListeners();
+  if(!me) return;
+  const friends = Object.keys(friendsMap || {});
+  for(const f of friends){
+    if(!f || f === me) continue;
+    const path = `messages/_dm/${[me,f].sort().join('--')}`;
+    let initial = true;
+    const q = query(ref(db,path), limitToLast(25));
+    const unsub = onChildAdded(q, snap=>{
+      const m = snap.val();
+      const key = snap.key;
+      if(!m || !m.u || m.u === me) return;
+      if(initial){ notifySeen.add(path+'/'+key); return; }
+      if(notifySeen.has(path+'/'+key)) return;
+      notifySeen.add(path+'/'+key);
+      const body = m.type === 'text' ? (m.text || 'sent you a message')
+        : m.type === 'gif' ? 'sent you a GIF'
+        : m.type === 'file' ? `sent you a file: ${m.name || 'file'}`
+        : 'sent you a message';
+      showDeviceNotification(m.u, body);
+    });
+    notifyUnsubs.push(unsub);
+    setTimeout(()=>{ initial = false; }, 1200);
+  }
+}
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const storage = getStorage(app);
@@ -821,6 +890,8 @@ async function enter(u, ip){
   me = u; myIp = ip || await getPublicIp();
   $('authView').hidden = true; $('appView').hidden = false;
   renderMeChip(); resetChannel();
+  // Ask once after sign-in so messages can appear as device/browser notifications.
+  setTimeout(()=>enableDeviceNotifications(), 500);
   const pref = ref(db,`presence/${me}`);
   try{
     await onDisconnect(pref).set({online:false, lastSeen:Date.now(), ip:myIp});
@@ -839,13 +910,14 @@ async function enter(u, ip){
     }
   });
   renderServers(); renderDMs(); renderOnline(); updateOnlinePill();
-  onValue(ref(db,`friends/${me}`), s=>{ friendsMap = s.val()||{}; renderDMs(); });
+  onValue(ref(db,`friends/${me}`), s=>{ friendsMap = s.val()||{}; renderDMs(); startDMNotificationListeners(); });
   onValue(ref(db,`friendRequests/${me}`), s=>{ reqMap = s.val()||{}; renderDMs(); });
   setVanta(vantaKey);
   $('msgInput').focus();
 }
 function forceLogout(title, detail){
   if(kicked) return; kicked = true;
+  stopDMNotificationListeners();
   try{ update(ref(db,`presence/${me}`), {online:false, lastSeen:Date.now()}); }catch{}
   try{ localStorage.removeItem('relay_session'); }catch{}
   $('kickTitle').textContent = title || 'Access revoked';
@@ -1649,6 +1721,7 @@ function curMemSid(){
 
 /* ================= MISC BINDINGS ================= */
  $('logoutBtn').onclick = async ()=>{
+  stopDMNotificationListeners();
   try{
     if(serverPres) await remove(serverPres);
     await update(ref(db,`users/${me}`), {sessToken:null});
